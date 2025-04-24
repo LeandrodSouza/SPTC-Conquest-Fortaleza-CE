@@ -1,4 +1,4 @@
-# Cálculo de Índice de Desempenho para Mesas de Commander - Conquest
+# Cálculo de Índice de Desempenho
 
 ## Introdução
 Este documento detalha o cálculo do **Índice de Desempenho (ID)** para seis mesas, cada uma representando um cenário único :
