@@ -1,4 +1,4 @@
-# SPTC-Conquest-Fortaleza-CE
+# SPTC-Fortaleza-CE
 
 # Sistema de Pontuação Torneio Commander - Conquest
 
