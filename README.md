@@ -102,7 +102,7 @@ ID_mesa_de_3 = ID_mesa_de_4 × 0,9998
 
 ### Definição das Variáveis
 
-| Variável | Sigla | Nome em Português | Peso | Fórmula |
+| Variável | Sigla | Nome              | Peso | Fórmula |
 |----------|-------|-------------------|------|---------|
 | Resultado da Partida | RP | Resultado final (vitória, empate, derrota) | 60% | **Vitória**: 100 pontos<br>**Empate**: 20 pontos<br>**Derrota**: 10 pontos |
 | Turno de Vitória ou Empate | TV | Turno em que a partida terminou | 35% | **Vitória**: Turno 1: 100 pontos<br>Turnos 2–10: 100 - ((turno - 1) × 0.222)<br>Turnos 11–20: 98 - ((turno - 10) × 0.1)<br>Turnos > 20: 95,8 pontos<br>**Empate**: Máximo 80 pontos<br>**Derrota**: Máximo 35 pontos |
