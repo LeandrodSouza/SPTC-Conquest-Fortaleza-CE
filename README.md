@@ -4,13 +4,12 @@
 
 ## Descrição
 
-O **Sistema de Gerenciamento de Torneios Commander** é uma solução completa para organizar e gerenciar torneios do formato Commander, um modo popular de jogos de cartas colecionáveis. Ele automatiza processos como cadastro de jogadores, juízes e decks, emparelhamento de mesas, registro de resultados, cálculo de pontuações, detecção de colusões e geração de rankings. Projetado para ser robusto e escalável, o sistema suporta torneios de diferentes tamanhos, garantindo precisão e conformidade com as regras do formato.
-
-Este README fornece uma visão detalhada do sistema, descrevendo suas 15 classes principais, as regras de negócio, fórmulas de pontuação e exemplos práticos, como uma rodada com 6 mesas. Ele é voltado para organizadores de torneios, administradores do sistema e desenvolvedores interessados em entender ou contribuir com o projeto.
+Este README fornece uma visão detalhada do protótipo SPTC-Sistema de Pontuação Torneio Commander, descrevendo suas 15 classes principais, as regras de negócio, fórmulas de pontuação e exemplos práticos, como um exemplo de uma rodada com 6 mesas. 
+Ele é voltado para organizadores de torneios, administradores do sistema e desenvolvedores interessados em entender ou contribuir com o projeto.
 
 ## Funcionalidades Principais
 
-- Cadastro seguro de juízes, jogadores e decks, com validações de email e senha.
+- Cadastro de juízes, jogadores e decks, com validações de email e senha.
 - Configuração de torneios com número mínimo de jogadores e rodadas automáticas.
 - Emparelhamento de jogadores em mesas usando um sistema Swiss simplificado, evitando repetições de oponentes.
 - Registro de eliminações, desistências e resultados de partidas, com cálculo do índice de desempenho (ID).
