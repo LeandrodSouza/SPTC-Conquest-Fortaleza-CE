@@ -28,7 +28,7 @@ Este README fornece uma visão detalhada do sistema, descrevendo suas 15 classes
 2. **Configuração**:
    - Clone o repositório do projeto.
    - Instale as dependências: `pip install colorama`.
-   - Execute o script principal: `python app-js.py`.
+   - Execute o script principal: `python prototipo.py`.
 
 3. **Persistência**:
    - O sistema salva dados automaticamente em `dados_sistema.json` após cada operação.
