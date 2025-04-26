@@ -1,4 +1,3 @@
-
 # SPTC-Fortaleza-CE
 ## Sistema de Pontuação Torneio Commander 
 
@@ -53,9 +52,9 @@ O sistema opera por meio de um menu interativo no terminal, com 14 opções:
 14. **Sair**: Salva o estado e encerra o sistema.
 
 ### Exemplo de Fluxo
-1. Cadastre um juiz (ex.: "Ana", "ana@exemplo.com", senha "Senha123").
+1. Cadastre um juiz (ex.: "Juiz-1", "juiz1@exemplo.com", senha "Senha123").
 2. Crie um torneio (ex.: "Desafio 2025", mínimo de 4 jogadores).
-3. Cadastre jogadores (ex.: "Bruno", "bruno@exemplo.com") e seus decks.
+3. Cadastre jogadores (ex.: "Jogador-1", "jogador1@exemplo.com") e seus decks.
 4. Inscreva jogadores no torneio.
 5. Finalize as inscrições e inicie rodadas.
 6. Registre resultados e gere rankings ou relatórios.
@@ -410,22 +409,22 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
 
 ### Mesa 1 (3 Jogadores, Vitória Rápida por Combo)
 
-**Jogadores**: Ana, Bruno, Clara.  
-**Cenário**: Ana usa uma estratégia de combo no turno 1, eliminando Bruno e Clara.  
+**Jogadores**: Jogador-1, Jogador-2, Jogador-3.  
+**Cenário**: Jogador-1 usa uma estratégia de combo no turno 1, eliminando Jogador-2 e Jogador-3.  
 **Resultados**:
-- Ana: Vitória, turno 1, 2 eliminações, vida final 40, 2 oponentes danificados.  
-- Bruno: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
-- Clara: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Jogador-1: Vitória, turno 1, 2 eliminações, vida final 40, 2 oponentes danificados.  
+- Jogador-2: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Jogador-3: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
 
 **Cálculo do ID**:
-- **Ana**:
+- **Jogador-1**:
   - RP: 100 × 0,60 = 60,0.
   - TV: 100 × 0,35 = 35,0.
   - ER: (2 / 2) × 100 × 0,02 = 2,0.
   - PV: 100 × 0,02 = 2,0.
   - PA: 100 × 0,01 = 1,0.
   - ID: (60,0 + 35,0 + 2,0 + 2,0 + 1,0) × 0,9998 = 99,98.
-- **Bruno** e **Clara**:
+- **Jogador-2** e **Jogador-3**:
   - RP: 10 × 0,60 = 6,0.
   - TV: 35 × 0,35 = 12,25.
   - ER: 0.
@@ -434,27 +433,27 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
   - ID: (6,0 + 12,25 + 0 + 0 + 0) × 0,9998 = 18,25.
 
 **Ranking da Mesa**:
-1. Ana: 99,98 pontos (Vitória).
-2. Bruno: 18,25 pontos (Derrota).
-3. Clara: 18,25 pontos (Derrota).
+1. Jogador-1: 99,98 pontos (Vitória).
+2. Jogador-2: 18,25 pontos (Derrota).
+3. Jogador-3: 18,25 pontos (Derrota).
 
 ### Mesa 2 (4 Jogadores, Vitória Rápida por Combo)
 
-**Jogadores**: Diego, Elisa, Fábio, Gabriela.  
-**Cenário**: Diego executa um combo no turno 1, eliminando todos os oponentes.  
+**Jogadores**: Jogador-4, Jogador-5, Jogador-6, Jogador-7.  
+**Cenário**: Jogador-4 executa um combo no turno 1, eliminando todos os oponentes.  
 **Resultados**:
-- Diego: Vitória, turno 1, 3 eliminações, vida final 40, 3 oponentes danificados.  
-- Elisa, Fábio, Gabriela: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Jogador-4: Vitória, turno 1, 3 eliminações, vida final 40, 3 oponentes danificados.  
+- Jogador-5, Jogador-6, Jogador-7: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
 
 **Cálculo do ID**:
-- **Diego**:
+- **Jogador-4**:
   - RP: 60,0.
   - TV: 35,0.
   - ER: (3 / 3) × 100 × 0,02 = 2,0.
   - PV: 2,0.
   - PA: 1,0.
   - ID: 60,0 + 35,0 + 2,0 + 2,0 + 1,0 = 100,0.
-- **Elisa, Fábio, Gabriela**:
+- **Jogador-5, Jogador-6, Jogador-7**:
   - RP: 6,0.
   - TV: 12,25.
   - ER: 0.
@@ -463,42 +462,42 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
   - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
 
 **Ranking da Mesa**:
-1. Diego: 100,0 pontos (Vitória).
-2. Elisa, Fábio, Gabriela: 18,25 pontos (Derrota).
+1. Jogador-4: 100,0 pontos (Vitória).
+2. Jogador-5, Jogador-6, Jogador-7: 18,25 pontos (Derrota).
 
 ### Mesa 3 (4 Jogadores, Empate com Eliminação Parcial)
 
-**Jogadores**: Hugo, Inês, João, Karen.  
-**Cenário**: João é eliminado por Hugo no turno 5. O tempo esgota, forçando empate entre Hugo, Inês e Karen.  
+**Jogadores**: Jogador-8, Jogador-9, Jogador-10, Jogador-11.  
+**Cenário**: Jogador-10 é eliminado por Jogador-8 no turno 5. O tempo esgota, forçando empate entre Jogador-8, Jogador-9 e Jogador-11.  
 **Resultados**:
-- Hugo: Empate, turno 10, 1 eliminação, vida final 20, 2 oponentes danificados.  
-- Inês: Empate, turno 10, 0 eliminações, vida final 16, 1 oponente danificado.  
-- Karen: Empate, turno 10, 0 eliminações, vida final 12, 1 oponente danificado.  
-- João: Derrota, turno 5, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Jogador-8: Empate, turno 10, 1 eliminação, vida final 20, 2 oponentes danificados.  
+- Jogador-9: Empate, turno 10, 0 eliminações, vida final 16, 1 oponente danificado.  
+- Jogador-11: Empate, turno 10, 0 eliminações, vida final 12, 1 oponente danificado.  
+- Jogador-10: Derrota, turno 5, 0 eliminações, vida final 0, 0 oponentes danificados.  
 
 **Cálculo do ID**:
-- **Hugo**:
+- **Jogador-8**:
   - RP: 20 × 0,60 = 12,0.
   - TV: [100 - (10 - 1) × 0,222] = 80,002 × 0,35 = 28,0.
   - ER: (1 / 3) × 100 × 0,02 = 0,67.
   - PV: 40 × 0,02 = 0,8.
   - PA: 0.
   - ID: 12,0 + 28,0 + 0,67 + 0,8 + 0 = 41,47.
-- **Inês**:
+- **Jogador-9**:
   - RP: 12,0.
   - TV: 28,0.
   - ER: 0.
   - PV: 40 × 0,02 = 0,8.
   - PA: 0.
   - ID: 12,0 + 28,0 + 0 + 0,8 + 0 = 40,8.
-- **Karen**:
+- **Jogador-11**:
   - RP: 12,0.
   - TV: 28,0.
   - ER: 0.
   - PV: (12 / 40) × 100 × 0,02 = 0,6.
   - PA: 0.
   - ID: 12,0 + 28,0 + 0 + 0,6 + 0 = 40,6.
-- **João**:
+- **Jogador-10**:
   - RP: 6,0.
   - TV: [100 - (5 - 1) × 0,222] = 99,112 × 0,35 = 12,25.
   - ER: 0.
@@ -507,36 +506,36 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
   - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
 
 **Ranking da Mesa**:
-1. Hugo: 41,47 pontos (Empate).
-2. Inês: 40,8 pontos (Empate).
-3. Karen: 40,6 pontos (Empate).
-4. João: 18,25 pontos (Derrota).
+1. Jogador-8: 41,47 pontos (Empate).
+2. Jogador-9: 40,8 pontos (Empate).
+3. Jogador-11: 40,6 pontos (Empate).
+4. Jogador-10: 18,25 pontos (Derrota).
 
 ### Mesa 4 (4 Jogadores, Vitória com Penalidade)
 
-**Jogadores**: Lucas, Marina, Nina, Otávio.  
-**Cenário**: Lucas vence no turno 8, eliminando Marina e Nina. Otávio desiste no turno 6. O juiz aplica uma advertência a Lucas por vitória sem dano a oponentes.  
+**Jogadores**: Jogador-12, Jogador-13, Jogador-14, Jogador-15.  
+**Cenário**: Jogador-12 vence no turno 8, eliminando Jogador-13 e Jogador-14. Jogador-15 desiste no turno 6. O juiz aplica uma advertência a Jogador-12 por vitória sem dano a oponentes.  
 **Resultados**:
-- Lucas: Vitória, turno 8, 2 eliminações, vida final 30, 0 oponentes danificados (advertência).  
-- Marina, Nina: Derrota, turno 8, 0 eliminações, vida final 0, 0 oponentes danificados.  
-- Otávio: Derrota, turno 6, 0 eliminações, vida final 10, 0 oponentes danificados (desistência).  
+- Jogador-12: Vitória, turno 8, 2 eliminações, vida final 30, 0 oponentes danificados (advertência).  
+- Jogador-13, Jogador-14: Derrota, turno 8, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Jogador-15: Derrota, turno 6, 0 eliminações, vida final 10, 0 oponentes danificados (desistência).  
 
 **Cálculo do ID**:
-- **Lucas**:
+- **Jogador-12**:
   - RP: 60,0.
   - TV: [100 - (8 - 1) × 0,222] = 84,446 × 0,35 = 29,56.
   - ER: (2 / 3) × 100 × 0,02 = 1,33.
   - PV: 2,0.
   - PA: 0 (sinalizado como suspeito).
   - ID: 60,0 + 29,56 + 1,33 + 2,0 + 0 = 92,89.
-- **Marina, Nina**:
+- **Jogador-13, Jogador-14**:
   - RP: 6,0.
   - TV: 12,25.
   - ER: 0.
   - PV: 0.
   - PA: 0.
   - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
-- **Otávio**:
+- **Jogador-15**:
   - RP: 6,0.
   - TV: [100 - (6 - 1) × 0,222] = 98,89 × 0,35 = 12,25.
   - ER: 0.
@@ -545,36 +544,36 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
   - ID: 6,0 + 12,25 + 0 + 0,3 + 0 = 18,55.
 
 **Ranking da Mesa**:
-1. Lucas: 92,89 pontos (Vitória, advertência).
-2. Otávio: 18,55 pontos (Derrota).
-3. Marina, Nina: 18,25 pontos (Derrota).
+1. Jogador-12: 92,89 pontos (Vitória, advertência).
+2. Jogador-15: 18,55 pontos (Derrota).
+3. Jogador-13, Jogador-14: 18,25 pontos (Derrota).
 
 ### Mesa 5 (4 Jogadores, Empate Completo)
 
-**Jogadores**: Pedro, Quitéria, Rafael, Sofia.  
+**Jogadores**: Jogador-16, Jogador-17, Jogador-18, Jogador-19.  
 **Cenário**: Nenhum jogador é eliminado, e o tempo esgota, forçando empate.  
 **Resultados**:
-- Pedro: Empate, turno 12, 0 eliminações, vida final 18, 2 oponentes danificados.  
-- Quitéria: Empate, turno 12, 0 eliminações, vida final 16, 1 oponente danificado.  
-- Rafael: Empate, turno 12, 0 eliminações, vida final 10, 1 oponente danificado.  
-- Sofia: Empate, turno 12, 0 eliminações, vida final 8, 0 oponentes danificados.  
+- Jogador-16: Empate, turno 12, 0 eliminações, vida final 18, 2 oponentes danificados.  
+- Jogador-17: Empate, turno 12, 0 eliminações, vida final 16, 1 oponente danificado.  
+- Jogador-18: Empate, turno 12, 0 eliminações, vida final 10, 1 oponente danificado.  
+- Jogador-19: Empate, turno 12, 0 eliminações, vida final 8, 0 oponentes danificados.  
 
 **Cálculo do ID**:
-- **Pedro, Quitéria**:
+- **Jogador-16, Jogador-17**:
   - RP: 12,0.
   - TV: [98 - (12 - 10) × 0,1] = 97,8 × 0,35 = 28,0.
   - ER: 0.
   - PV: 40 × 0,02 = 0,8.
   - PA: 0.
   - ID: 12,0 + 28,0 + 0 + 0,8 + 0 = 40,8.
-- **Rafael**:
+- **Jogador-18**:
   - RP: 12,0.
   - TV: 28,0.
   - ER: 0.
   - PV: (10 / 40) × 100 × 0,02 = 0,5.
   - PA: 0.
   - ID: 12,0 + 28,0 + 0 + 0,5 + 0 = 40,5.
-- **Sofia**:
+- **Jogador-19**:
   - RP: 12,0.
   - TV: 28,0.
   - ER: 0.
@@ -583,43 +582,43 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
   - ID: 12,0 + 28,0 + 0 + 0,4 + 0 = 40,4.
 
 **Ranking da Mesa**:
-1. Pedro, Quitéria: 40,8 pontos (Empate).
-2. Rafael: 40,5 pontos (Empate).
-3. Sofia: 40,4 pontos (Empate).
+1. Jogador-16, Jogador-17: 40,8 pontos (Empate).
+2. Jogador-18: 40,5 pontos (Empate).
+3. Jogador-19: 40,4 pontos (Empate).
 
 ### Mesa 6 (4 Jogadores, Vitória com Eliminações Parciais)
 
-**Jogadores**: Tiago, Úrsula, Victor, Wanda.  
-**Cenário**: Úrsula elimina Victor no turno 4. Wanda desiste no turno 6. Tiago vence no turno 10, eliminando Úrsula.  
+**Jogadores**: Jogador-20, Jogador-21, Jogador-22, Jogador-23.  
+**Cenário**: Jogador-21 elimina Jogador-22 no turno 4. Jogador-23 desiste no turno 6. Jogador-20 vence no turno 10, eliminando Jogador-21.  
 **Resultados**:
-- Tiago: Vitória, turno 10, 1 eliminação, vida final 25, 2 oponentes danificados.  
-- Úrsula: Derrota, turno 10, 1 eliminação, vida final 0, 1 oponente danificado.  
-- Victor: Derrota, turno 4, 0 eliminações, vida final 0, 0 oponentes danificados.  
-- Wanda: Derrota, turno 6, 0 eliminações, vida final 15, 0 oponentes danificados (desistência).  
+- Jogador-20: Vitória, turno 10, 1 eliminação, vida final 25, 2 oponentes danificados.  
+- Jogador-21: Derrota, turno 10, 1 eliminação, vida final 0, 1 oponente danificado.  
+- Jogador-22: Derrota, turno 4, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Jogador-23: Derrota, turno 6, 0 eliminações, vida final 15, 0 oponentes danificados (desistência).  
 
 **Cálculo do ID**:
-- **Tiago**:
+- **Jogador-20**:
   - RP: 60,0.
   - TV: [100 - (10 - 1) × 0,222] = 80,002 × 0,35 = 28,0.
   - ER: (1 / 3) × 100 × 0,02 = 0,67.
   - PV: 2,0.
   - PA: 1,0.
   - ID: 60,0 + 28,0 + 0,67 + 2,0 + 1,0 = 91,67.
-- **Úrsula**:
+- **Jogador-21**:
   - RP: 6,0.
   - TV: 12,25.
   - ER: (1 / 3) × 100 × 0,02 = 0,67.
   - PV: 0.
   - PA: 0.
   - ID: 6,0 + 12,25 + 0,67 + 0 + 0 = 18,92.
-- **Victor**:
+- **Jogador-22**:
   - RP: 6,0.
   - TV: [100 - (4 - 1) × 0,222] = 99,334 × 0,35 = 12,25.
   - ER: 0.
   - PV: 0.
   - PA: 0.
   - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
-- **Wanda**:
+- **Jogador-23**:
   - RP: 6,0.
   - TV: [100 - (6 - 1) × 0,222] = 98,89 × 0,35 = 12,25.
   - ER: 0.
@@ -628,28 +627,28 @@ Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 20
   - ID: 6,0 + 12,25 + 0 + 0,3 + 0 = 18,55.
 
 **Ranking da Mesa**:
-1. Tiago: 91,67 pontos (Vitória).
-2. Úrsula: 18,92 pontos (Derrota).
-3. Wanda: 18,55 pontos (Derrota).
-4. Victor: 18,25 pontos (Derrota).
+1. Jogador-20: 91,67 pontos (Vitória).
+2. Jogador-21: 18,92 pontos (Derrota).
+3. Jogador-23: 18,55 pontos (Derrota).
+4. Jogador-22: 18,25 pontos (Derrota).
 
 ### Ranking Geral Após a Rodada
 
 Assumindo IDs acumulados da rodada anterior, o ranking geral considera o ID total, força dos oponentes e vitórias isoladas:
 
-| Posição | Jogador   | ID Total | Vitórias Isoladas | Força dos Oponentes |
-|---------|-----------|----------|-------------------|---------------------|
-| 1       | Diego     | 150,0    | 2                 | 60,0                |
-| 2       | Ana       | 149,98   | 2                 | 55,0                |
-| 3       | Tiago     | 141,67   | 2                 | 50,0                |
-| 4       | Hugo      | 91,47    | 1                 | 45,0                |
-| ...     | ...       | ...      | ...               | ...                 |
-| 20      | João      | 68,25    | 0                 | 40,0                |
-| 21      | Victor    | 68,25    | 0                 | 35,0                |
+| Posição | Jogador     | ID Total | Vitórias Isoladas | Força dos Oponentes |
+|---------|-------------|----------|-------------------|---------------------|
+| 1       | Jogador-4   | 150,0    | 2                 | 60,0                |
+| 2       | Jogador-1   | 149,98   | 2                 | 55,0                |
+| 3       | Jogador-20  | 141,67   | 2                 | 50,0                |
+| 4       | Jogador-8   | 91,47    | 1                 | 45,0                |
+| ...     | ...         | ...      | ...               | ...                 |
+| 20      | Jogador-10  | 68,25    | 0                 | 40,0                |
+| 21      | Jogador-22  | 68,25    | 0                 | 35,0                |
 
 **Desempate**:
-- Diego supera Ana devido ao ID maior (150,0 vs. 149,98).  
-- João supera Victor pelo maior valor de força dos oponentes (40,0 vs. 35,0).
+- Jogador-4 supera Jogador-1 devido ao ID maior (150,0 vs. 149,98).  
+- Jogador-10 supera Jogador-22 pelo maior valor de força dos oponentes (40,0 vs. 35,0).
 
 ## Contribuindo
 
