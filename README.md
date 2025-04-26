@@ -1,361 +1,661 @@
 
 # SPTC-Fortaleza-CE
-## Sistema de Pontuação Torneio Commander - Conquest
+## Sistema de Pontuação Torneio Commander 
 
-### Introdução
+## Descrição
 
-#### Objetivo
-Desenvolver um sistema de pontuação para o torneio **Commander - Conquest**, utilizando o **Índice de Desempenho (ID)** com siglas **RP**, **TV**, **ER**, **PV**, e **PA**. Projetado para torneios de 4 a 100 jogadores, organizados em mesas de 3 ou 4 jogadores, o sistema avalia o desempenho em cenários variados de vitórias, empates e derrotas, promovendo matchmaking equilibrado, desempates justos e prevenção de colusão. O sistema suporta normalização para mesas de 3 jogadores, com IDs reduzidos por um fator de 0,9998 (diferença de 0,02%).
+O **Sistema de Gerenciamento de Torneios Commander** é uma solução completa para organizar e gerenciar torneios do formato Commander, um modo popular de jogos de cartas colecionáveis. Ele automatiza processos como cadastro de jogadores, juízes e decks, emparelhamento de mesas, registro de resultados, cálculo de pontuações, detecção de colusões e geração de rankings. Projetado para ser robusto e escalável, o sistema suporta torneios de diferentes tamanhos, garantindo precisão e conformidade com as regras do formato.
 
-#### Escopo
-O sistema é projetado para torneios flexíveis, com 4 a 100 jogadores, organizados em mesas de 4 (ou 3, se necessário). Ele abrange:
-- Cálculo do ID com base em **Resultado da Partida (RP)**, **Turno de Vitória ou Empate (TV)**, **Eliminações Realizadas (ER)**, **Pontos de Vida Restantes (PV)**, e **Pontos de Agressão (PA)**.
-- Matchmaking baseado em ID médio.
-- Critérios de desempate.
-- Medidas anti-colusão.
-- Suporte a cenários variados, incluindo vitórias por dano, combo determinístico, esgotamento de biblioteca, condição alternativa, e empates.
+Este README fornece uma visão detalhada do sistema, descrevendo suas 15 classes principais, as regras de negócio, fórmulas de pontuação e exemplos práticos, como uma rodada com 6 mesas. Ele é voltado para organizadores de torneios, administradores do sistema e desenvolvedores interessados em entender ou contribuir com o projeto.
 
-### Visão Geral
+## Funcionalidades Principais
 
-#### Descrição
-O sistema calcula o **Índice de Desempenho (ID)** como uma porcentagem (0% a 100%) por partida, com base em cinco métricas:
-- **Resultado da Partida (RP)**: Vitória, empate ou derrota = 60%.
-- **Turno de Vitória ou Empate (TV)**: Turno em que a partida termina = 35%.
-- **Eliminações Realizadas (ER)**: Oponentes eliminados diretamente ou via combo = 2%.
-- **Pontos de Vida Restantes (PV)**: Vida no fim ou na eliminação = 2%.
-- **Pontos de Agressão (PA)**: Dano causado a oponentes = 1%.
+- Cadastro seguro de juízes, jogadores e decks, com validações de email e senha.
+- Configuração de torneios com número mínimo de jogadores e rodadas automáticas.
+- Emparelhamento de jogadores em mesas usando um sistema Swiss simplificado, evitando repetições de oponentes.
+- Registro de eliminações, desistências e resultados de partidas, com cálculo do índice de desempenho (ID).
+- Detecção de colusões com base em padrões suspeitos e aplicação de penalidades (advertências, reduções de ID ou desclassificações).
+- Persistência de dados para salvar e recuperar o estado do torneio.
+- Geração de rankings com critérios de desempate e relatórios detalhados.
+- Gerenciamento de tempo para rodadas, com suporte a turnos extras.
 
-**Fórmula do ID**:
-```
-ID = (0,60 × RP) + (0,35 × TV) + (0,02 × ER) + (0,02 × PV) + (0,01 × PA)
-```
-Para mesas de 3 jogadores:
-```
-ID_mesa_de_3 = ID_mesa_de_4 × 0,9998
-```
+## Instalação
 
-#### Objetivos
-- Escalar para 4 a 100 jogadores.
-- Recompensar desempenho em vitórias, empates e derrotas.
-- Garantir matchmaking equilibrado.
-- Fornecer desempates justos.
-- Prevenir colusão em partidas multiplayer.
-- Normalizar resultados para mesas de 3 jogadores com diferença de 0,02%.
-- Garantir hierarquia: Vitória (ID ≥ 95,53%) > Empate (ID ≤ 42,13%) > Derrota (ID ≤ 19,22%).
+1. **Pré-requisitos**:
+   - Python 3.8 ou superior.
+   - Bibliotecas necessárias: `uuid`, `datetime`, `json`, `re`, `pathlib`, `os`, `colorama`.
 
-### Requisitos Funcionais
+2. **Configuração**:
+   - Clone o repositório do projeto.
+   - Instale as dependências: `pip install colorama`.
+   - Execute o script principal: `python app-js.py`.
 
-1. **Cálculo do Índice de Desempenho (ID)**  
-   **RF1.1**: Calcular o ID por partida com siglas RP, TV, ER, PV, PA, suportando:
-   - Vitórias isoladas (ex.: dano letal, combo determinístico, esgotamento de biblioteca, condição alternativa).
-   - Empates (ex.: tempo esgotado, eliminação simultânea).
-   - Derrotas (2º a 4º lugar).
-   - Turnos de 1 a 20+.
-   - Eliminações de 0 a 3 (mesa de 4) ou 0 a 2 (mesa de 3).
-   - Pontos de vida de 0 a 40+.
-   - Dano causado a 0, 1, ou 2+ oponentes.  
-   
-   **RF1.2**: Registrar ID por rodada e calcular média acumulada.  
-   **RF1.3**: Suportar entrada de dados via aplicativo, planilha ou web, validando turnos, eliminações, PV e PA.  
-   **RF1.4**: Permitir ajustes manuais por juízes.
+3. **Persistência**:
+   - O sistema salva dados automaticamente em `dados_sistema.json` após cada operação.
+   - Dados salvos são carregados ao iniciar o sistema, se o arquivo existir.
 
-2. **Matchmaking**  
-   **RF2.1**: Agrupar por ID médio, com desvio máximo de 5% por mesa, para 4 a 100 jogadores.  
-   **RF2.2**: Evitar repetição de adversários, priorizando equilíbrio.  
-   **RF2.3**: Usar algoritmo Swiss adaptado para multiplayer.  
-   **RF2.4**: Lidar com mesas de 3 jogadores, ajustando cálculos de ID com fator 0,9998.
+## Uso
 
-3. **Limite de Tempo**  
-   **RF3.1**: Rodadas de 45 minutos.  
-   **RF3.2**: Turno adicional se a partida não terminar.  
-   **RF3.3**: Empate (RP = 20) para jogadores ativos após turno adicional.
+O sistema opera por meio de um menu interativo no terminal, com 14 opções:
 
-4. **Critérios de Desempate**  
-   **RF4.1**: Critérios na ordem:
-   - Média de ID acumulada.
-   - Força dos adversários (média de IDs dos oponentes).
-   - Número de vitórias isoladas (RP = 100).
-   - Método aleatório.  
-   **RF4.2**: Calcular e exibir desempates automaticamente.
+1. **Cadastrar Juiz**: Registra um juiz com nome, email e senha.
+2. **Cadastrar Torneio**: Cria um torneio com nome e número mínimo de jogadores.
+3. **Cadastrar Jogador**: Registra um jogador com nome, email e senha.
+4. **Cadastrar Deck**: Associa um deck a um jogador, especificando o comandante.
+5. **Inscrever Jogador**: Inscreve um jogador em um torneio com um deck validado.
+6. **Finalizar Inscrições**: Encerra as inscrições e define o número de rodadas.
+7. **Iniciar Rodada**: Forma mesas e inicia partidas.
+8. **Registrar Resultados**: Registra resultados de partidas, calculando o ID.
+9. **Gerar Ranking**: Exibe o ranking geral do torneio.
+10. **Gerar Relatório**: Produz um relatório detalhado de torneios, jogadores e decks.
+11. **Registrar Eliminação/Desistência**: Registra eliminações parciais ou desistências.
+12. **Registrar Denúncia**: Reporta suspeitas de colusão.
+13. **Aplicar Penalidade**: Aplica penalidades a jogadores, com autenticação de juiz.
+14. **Sair**: Salva o estado e encerra o sistema.
 
-5. **Regras Anti-Colusão**  
-   **RF5.1**: Monitorar:
-   - Ausência de ataques sem justificativa.
-   - Concentração de eliminações em subgrupos.
-   - Baixa pontuação em PA.
-   - Turnos prolongados intencionalmente.  
-   **RF5.2**: Penalidades:
-   - Advertência (infrações leves).
-   - Redução de 20% no ID (infrações moderadas).
-   - Desclassificação (infrações graves/reincidências).  
-   **RF5.3**: Ferramenta para denúncias anônimas.  
-   **RF5.4**: Análise estatística de desvios em PA, ER, TV.  
-   **RF5.5**: Banco de dados de infrações.
+### Exemplo de Fluxo
+1. Cadastre um juiz (ex.: "Ana", "ana@exemplo.com", senha "Senha123").
+2. Crie um torneio (ex.: "Desafio 2025", mínimo de 4 jogadores).
+3. Cadastre jogadores (ex.: "Bruno", "bruno@exemplo.com") e seus decks.
+4. Inscreva jogadores no torneio.
+5. Finalize as inscrições e inicie rodadas.
+6. Registre resultados e gere rankings ou relatórios.
 
-### Requisitos Não Funcionais
-- **RNF1**: Processar IDs e matchmaking para até 100 jogadores em <15 segundos.
-- **RNF2**: Interface intuitiva com nomes em português.
-- **RNF3**: Backup automático após cada rodada.
-- **RNF4**: Acessível via web/aplicativo, compatível com móveis e desktops.
-- **RNF5**: Entrada de dados em tempo real com validação.
-- **RNF6**: Escalar para 4 a 100 jogadores sem perda de desempenho.
+## Estrutura do Sistema
 
-### Definição das Variáveis
+O sistema é composto por 15 classes, cada uma com responsabilidades específicas e regras bem definidas. Abaixo, detalhamos cada classe.
 
-| Variável | Sigla | Nome              | Peso | Fórmula |
-|----------|-------|-------------------|------|---------|
-| Resultado da Partida | RP | Resultado final (vitória, empate, derrota) | 60% | **Vitória**: 100 pontos<br>**Empate**: 20 pontos<br>**Derrota**: 10 pontos |
-| Turno de Vitória ou Empate | TV | Turno em que a partida terminou | 35% | **Vitória**: Turno 1: 100 pontos<br>Turnos 2–10: 100 - ((turno - 1) × 0.222)<br>Turnos 11–20: 98 - ((turno - 10) × 0.1)<br>Turnos > 20: 95,8 pontos<br>**Empate**: Máximo 80 pontos<br>**Derrota**: Máximo 35 pontos |
-| Eliminações Realizadas | ER | Oponentes eliminados diretamente ou via combo | 2% | **Vitória/Empate**: (Eliminações / (número_jogadores - 1)) × 100<br>Combo elimina todos: 100 pontos<br>Sem eliminações diretas (ex.: mill, stax): 50 pontos<br>**Derrota**: 0 pontos |
-| Pontos de Vida Restantes | PV | Percentual de vida no fim ou na eliminação | 2% | **Vitória**: 100 pontos (fixo)<br>**Empate**: min((vida_final / 40) × 100, 40)<br>**Derrota**: min((vida_final / 40) × 100, 15) |
-| Pontos de Agressão | PA | Dano causado a oponentes | 1% | **Vitória**: 2+ oponentes: 100 pontos<br>1 oponente: 50 pontos<br>0 oponentes: 0 pontos<br>**Empate/Derrota**: 0 pontos |
+### 1. Utilitários
 
-### Sistema de Pontuação
+**Propósito**: Fornece ferramentas auxiliares para validações e cálculos comuns.  
+**Atributos Principais**: Métodos para validação de emails, índices numéricos e cálculo de médias.  
+**Responsabilidades**:  
+- Valida emails para garantir unicidade entre jogadores e juízes.  
+- Verifica se índices numéricos estão dentro de intervalos válidos (ex.: opções de menu de 1 a 14).  
+- Calcula a média do índice de desempenho (ID) de uma lista de jogadores.  
+- Fornece mensagens de erro padrão (ex.: "Torneio não existe").  
+**Contexto de Uso**: Usada por outras classes para validar entradas (ex.: ao cadastrar um jogador) ou calcular métricas (ex.: média de ID por mesa).  
+**Regras**:  
+- Emails duplicados são rejeitados.  
+- Índices fora do intervalo geram erros.  
+- Médias são calculadas apenas para listas não vazias, retornando 0 caso contrário.
 
-O **Índice de Desempenho (ID)** é calculado por partida, com base nas métricas acima. Para mesas de 3 jogadores, o ID é ajustado por um fator de 0,9998 para manter uma diferença de 0,02% em relação a mesas de 4 jogadores.
+### 2. Validador
 
-**Blindagens Matemáticas**:
-- **Pior Vitória**: ID = 95,53 (mesa de 4), 95,51 (mesa de 3).
-- **Melhor Empate**: ID = 42,13 (mesa de 4), 42,11 (mesa de 3).
-- **Melhor Derrota**: ID = 19,22 (mesa of 4), 19,22 (mesa de 3).
-- **Restrições**:
-  - \( 2 \times 42,13 = 84,26 < 95,53 \) (mesa de 4).
-  - \( 2 \times 42,11 = 84,22 < 95,51 \) (mesa de 3).
-  - \( 2 \times 19,22 = 38,44 < 42,13 \) (mesa de 4).
-  - \( 2 \times 19,22 = 38,44 < 42,11 \) (mesa de 3).
+**Propósito**: Realiza validações específicas para entradas do sistema.  
+**Atributos Principais**: Métodos para validar emails, senhas, vida final e turnos.  
+**Responsabilidades**:  
+- Valida o formato de emails (ex.: deve conter "@" e domínio válido).  
+- Verifica a força de senhas (mínimo 8 caracteres, com letras maiúsculas, minúsculas e números).  
+- Normaliza a vida final, limitando-a a 40 pontos.  
+- Valida turnos com base no turno atual e turnos extras permitidos.  
+**Contexto de Uso**: Usada durante cadastros (ex.: email de juiz) e registros de resultados (ex.: vida final).  
+**Regras**:  
+- Emails inválidos geram erros.  
+- Senhas fracas são rejeitadas com mensagens específicas.  
+- Vida final é ajustada para o intervalo [0, 40].  
+- Turnos excedentes (além do turno atual + turnos extras) são inválidos.
 
-### Definição de Melhor e Pior Resultados
+### 3. Juiz
 
-A tabela abaixo resume os **melhores** e **piores** resultados para vitória, empate e derrota, com os respectivos Índices de Desempenho (ID) para mesas de 4 e 3 jogadores, parâmetros (RP, TV, ER, PV, PA) e condições principais. IDs em mesas de 3 jogadores são reduzidos por um fator de 0,9998.
+**Propósito**: Representa um juiz que gerencia o torneio e toma decisões críticas.  
+**Atributos Principais**: Identificador único, nome, email, senha, permissões (ex.: configurar torneio, aplicar penalidades).  
+**Responsabilidades**:  
+- Configura torneios, definindo nome e número mínimo de jogadores.  
+- Valida resultados de partidas, garantindo conformidade.  
+- Aplica penalidades (advertências, reduções de ID, desclassificações).  
+- Autentica-se com email e senha para ações sensíveis.  
+**Contexto de Uso**: Um juiz é cadastrado antes do torneio e realiza ações como iniciar rodadas ou investigar colusões.  
+**Regras**:  
+- Emails devem ser únicos e válidos.  
+- Senhas devem atender aos critérios de força.  
+- A autenticação é obrigatória para penalidades.
 
-| Categoria       | ID (%) (Mesa 4) | ID (%) (Mesa 3) | RP | TV   | ER   | PV  | PA | Condições Principais |
-|-----------------|-----------------|-----------------|----|------|------|-----|----|----------------------|
-| Melhor Vitória  | 100             | 99,98           | 100| 100  | 100  | 100 | 100| Turno 1, eliminar todos, dano a 2+ oponentes |
-| Pior Vitória    | 95,53           | 95,51           | 100| 95,8 | 0    | 100 | 0  | Turno > 20, sem eliminações ou dano |
-| Melhor Empate   | 42,13           | 42,11           | 20 | 80   | 66,67 (Mesa 4), 50 (Mesa 3) | 40 | 0 | Eliminar 2 (Mesa 4) ou 1 (Mesa 3), vida ≥ 16, turno longo |
-| Pior Empate     | 40,0            | 39,99           | 20 | 80   | 0    | 0   | 0  | Vida = 0, sem eliminações ou dano |
-| Melhor Derrota  | 19,22           | 19,22           | 10 | 35   | 33,33 (Mesa 4), 50 (Mesa 3) | 15 | 0 | Vida ≥ 6, turno ≥ 7, eliminar 1 |
-| Pior Derrota    | 18,25           | 18,25           | 10 | 35   | 0    | 0   | 0  | Vida = 0, sem eliminações ou dano |
+### 4. Jogador
 
-#### Checklists para Cada Resultado
+**Propósito**: Representa um participante do torneio, com desempenho rastreado.  
+**Atributos Principais**: Identificador único, nome, email, senha, decks, histórico de partidas, índice de desempenho (ID), vitórias isoladas, penalidades.  
+**Responsabilidades**:  
+- Inscreve-se em torneios com um deck validado.  
+- Participa de partidas, podendo vencer, empatar, ser eliminado ou desistir.  
+- Acumula pontos no ID com base nos resultados.  
+- Recebe penalidades por infrações.  
+**Contexto de Uso**: Jogadores são cadastrados, inscrevem-se em torneios e competem em mesas.  
+**Regras**:  
+- Emails e senhas devem ser únicos e válidos.  
+- Um jogador só pode usar um deck por torneio.  
+- Penalidades afetam o ID ou podem levar à desclassificação.
 
-##### **Melhor Vitória (ID = 100% Mesa 4, 99,98% Mesa 3)**
-- [x] Vencer a partida no **turno 1** (TV = 100).
-- [x] Eliminar **todos os oponentes** diretamente ou via combo determinístico (ER = 100).
-- [x] Causar dano a **dois ou mais oponentes** (mesa de 4) ou **um oponente** (mesa de 3) antes da vitória (PA = 100).
+### 5. Deck
 
+**Propósito**: Representa o conjunto de cartas de um jogador, identificado por um comandante.  
+**Atributos Principais**: Identificador único, jogador dono, comandante, status de validação, torneio associado, status ativo/inativo.  
+**Responsabilidades**:  
+- É cadastrado para um jogador, especificando o comandante.  
+- Deve ser validado antes do torneio.  
+- Fica associado a um torneio e marcado como inativo até sua conclusão.  
+- É liberado para reutilização após o torneio.  
+**Contexto de Uso**: Um jogador cadastra um deck, que é validado por um juiz antes da inscrição.  
+**Regras**:  
+- Um deck só pode ser usado em um torneio por vez.  
+- Decks inativos ou associados a outros torneios são inválidos.  
+- O comandante não pode ser vazio.
 
-##### **Pior Vitória (ID = 95,53% Mesa 4, 95,51% Mesa 3)**
-- [x] Vencer a partida após o **turno 20** (TV = 95,8).
-- [x] Não realizar eliminações diretas (ER = 0, ex.: vitória por condição alternativa ou concessão).
-- [x] Não causar dano a nenhum oponente (PA = 0).
+### 6. Torneio
 
-##### **Melhor Empate (ID = 42,13% Mesa 4, 42,11% Mesa 3)**
-- [x] Terminar a partida em **empate** (ex.: tempo esgotado, RP = 20).
-- [x] Eliminar **dois oponentes** (mesa de 4, ER = 66,67) ou **um oponente** (mesa de 3, ER = 50).
-- [x] Manter **16 ou mais pontos de vida** (PV = 40).
-- [x] Sobreviver até **turno avançado** (ex.: turno ≥ 15, TV = 80).
-- [x] Não causar dano além das eliminações (PA = 0).
+**Propósito**: Representa um evento competitivo com múltiplas rodadas.  
+**Atributos Principais**: Identificador único, nome, data, número de rodadas, mínimo de jogadores, listas de jogadores, juízes e mesas, rodada atual, status de inscrições, tempo por rodada, turnos extras.  
+**Responsabilidades**:  
+- Define as regras do torneio (ex.: mínimo de jogadores, tempo de rodada).  
+- Gerencia inscrições até seu encerramento.  
+- Organiza rodadas, distribuindo jogadores em mesas.  
+- Rastreia o progresso até a conclusão.  
+**Contexto de Uso**: Um juiz cria o torneio, jogadores se inscrevem, e o sistema gerencia rodadas até determinar os vencedores.  
+**Regras**:  
+- Mínimo de 4 jogadores, com distribuição ideal de 4 ou 3 por mesa.  
+- Inscrições são encerradas antes das rodadas.  
+- O número de rodadas é calculado automaticamente (ex.: 3 para até 8 jogadores, 4 para até 16).  
+- Decks são liberados ao finalizar o torneio.
 
-##### **Pior Empate (ID = 40,0% Mesa 4, 39,99% Mesa 3)**
-- [x] Terminar a partida em **empate** (RP = 20).
-- [x] Não eliminar nenhum oponente (ER = 0).
-- [x] Terminar com **0 pontos de vida** (PV = 0).
-- [x] Não causar dano a oponentes (PA = 0).
-- [x] Chegar ao tempo limite ou empate sem interação.
+### 7. Partida
 
-##### **Melhor Derrota (ID = 19,22% Mesa 4, 19,22% Mesa 3)**
-- [x] Ser eliminado em **derrota** (RP = 10).
-- [x] Manter **6 ou mais pontos de vida** na eliminação (PV = 15).
-- [x] Eliminar **um oponente** antes da derrota (ER = 33,33 para mesa de 4, 50 para mesa de 3).
-- [x] Alcançar **turno ≥ 7** (TV = 35).
-- [x] Não causar dano além da eliminação (PA = 0).
+**Propósito**: Representa um confronto entre jogadores em uma mesa.  
+**Atributos Principais**: Identificador único, lista de jogadores, turno atual, eliminações, resultados, pontuações, tempo de início.  
+**Responsabilidades**:  
+- Agrupa 3 ou 4 jogadores por mesa.  
+- Registra eliminações, desistências e resultados (vitória, empate, derrota).  
+- Calcula pontuações com base nos resultados.  
+- Monitora o tempo da partida.  
+**Contexto de Uso**: Criada automaticamente ao iniciar uma rodada, com resultados registrados ao final.  
+**Regras**:  
+- Apenas um jogador pode vencer por mesa, ou todos os ativos empatam.  
+- Eliminações não podem exceder o número de jogadores menos 2.  
+- Turnos registrados devem respeitar o limite (turno atual + turnos extras).  
+- Jogadores eliminados recebem derrota.
 
-##### **Pior Derrota (ID = 18,25% Mesa 4, 18,25% Mesa 3)**
-- [x] Ser eliminado em **derrota** (RP = 10).
-- [x] Terminar com **0 pontos de vida** (PV = 0).
-- [x] Não eliminar nenhum oponente (ER = 0).
-- [x] Não causar dano a oponentes (PA = 0).
-- [x] Alcançar **turno ≥ 7** (TV = 35).
+### 8. Eliminação
 
-### Mesa 1: Vitória Isolada (Oponentes com 0 PV Simultaneamente)
-**Contexto**: P1 vence no turno 7, eliminando P2, P3 e P4 simultaneamente com uma ação que reduz todos a 0 PV. P1 causa dano a 2+ oponentes.
+**Propósito**: Registra a saída de um jogador de uma partida.  
+**Atributos Principais**: Jogador eliminado, jogador causador (se aplicável), turno, indicador de desistência.  
+**Responsabilidades**:  
+- Documenta quem foi eliminado, quando e por quem (ou se foi desistência).  
+- Contribui para o cálculo de pontuações (ex.: eliminações válidas).  
+**Contexto de Uso**: Usada quando um jogador perde todos os pontos de vida ou desiste.  
+**Regras**:  
+- Eliminações causadas por outro jogador contam para o componente ER do ID.  
+- Desistências não geram pontos de eliminação.  
+- O turno deve ser válido (dentro do limite de turnos extras).
 
-**Parâmetros**:
-- **P1 (Vencedor)**: RP = 100, TV = 100 - ((7-1) × 0,222) = 98,668, ER = 100, PV = 100, PA = 100.
-- **P2 (Derrota)**: RP = 10, TV = min(98,668, 35) = 35, ER = 0, PV = min((0/40) × 100, 15) = 0, PA = 0.
-- **P3 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = 0, PA = 0.
-- **P4 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = 0, PA = 0.
+### 9. Inscrição
 
-**Cálculo**:
+**Propósito**: Gerencia a associação de um jogador e seu deck a um torneio.  
+**Atributos Principais**: Identificador único, torneio, jogador, deck, data de inscrição, status (ativa, cancelada, concluída).  
+**Responsabilidades**:  
+- Registra a inscrição de um jogador com um deck específico.  
+- Permite cancelar a inscrição, liberando o deck.  
+- Marca a inscrição como concluída ao finalizar o torneio.  
+**Contexto de Uso**: Usada quando um jogador se inscreve em um torneio.  
+**Regras**:  
+- Um jogador só pode se inscrever uma vez por torneio.  
+- O deck deve estar ativo e não associado a outro torneio.  
+- Cancelamentos liberam o deck para outros usos.
 
-| Jogador | Resultado | RP (60%) | TV (35%) | ER (2%) | PV (2%) | PA (1%) | ID (%) |
-|---------|-----------|----------|----------|---------|---------|---------|--------|
-| P1      | Vitória   | 100      | 98,668   | 100     | 100     | 100     | (0,60×100) + (0,35×98,668) + (0,02×100) + (0,02×100) + (0,01×100) = 60 + 34,534 + 2 + 2 + 1 = **99,534** |
-| P2      | Derrota   | 10       | 35       | 0       | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0 + 0 + 0 = **18,25** |
-| P3      | Derrota   | 10       | 35       | 0       | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0 + 0 + 0 = **18,25** |
-| P4      | Derrota   | 10       | 35       | 0       | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0 + 0 + 0 = **18,25** |
+### 10. Persistência
 
-### Mesa 2: Vitória Isolada (Oponentes Zerados, Eliminações por Diferentes Jogadores)
-**Contexto**: P5 vence no turno 12, eliminando P8 (último oponente). P6 elimina P7, P7 elimina P6, todos com 0 PV. P5 causa dano a 2+ oponentes.
+**Propósito**: Gerencia o armazenamento e recuperação do estado do sistema.  
+**Atributos Principais**: Métodos para salvar e carregar dados em JSON.  
+**Responsabilidades**:  
+- Salva torneios, jogadores, juízes, decks e inscrições em um arquivo.  
+- Carrega dados salvos para retomar um torneio.  
+**Contexto de Uso**: Usada após cada operação (ex.: registrar resultados) e ao iniciar o sistema.  
+**Regras**:  
+- Dados são salvos em formato JSON, preservando relações entre entidades.  
+- Se o arquivo de dados não existir, o sistema inicia com estado vazio.  
+- Erros de carregamento são tratados com mensagens claras.
 
-**Parâmetros**:
-- **P5 (Vencedor)**: RP = 100, TV = 98 - ((12-10) × 0,1) = 97,8, ER = (1/3) × 100 = 33,33, PV = 100, PA = 100.
-- **P6 (Derrota)**: RP = 10, TV = min(97,8, 35) = 35, ER = (1/3) × 100 = 33,33, PV = min((0/40) × 100, 15) = 0, PA = 0.
-- **P7 (Derrota)**: RP = 10, TV = 35, ER = (1/3) × 100 = 33,33, PV = 0, PA = 0.
-- **P8 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = 0, PA = 0.
+### 11. Calculador de Índice de Desempenho
 
-**Cálculo**:
+**Propósito**: Calcula o índice de desempenho (ID) dos jogadores.  
+**Atributos Principais**: Fórmulas para os componentes RP, TV, ER, PV, PA e limites de validação.  
+**Responsabilidades**:  
+- Calcula o ID como a soma ponderada de cinco componentes.  
+- Valida se o ID está dentro dos limites para cada resultado.  
+- Aplica ajuste de 0,02% para mesas de 3 jogadores.  
+**Contexto de Uso**: Usada ao registrar resultados de partidas.  
+**Fórmulas e Regras**:
+- **RP (Resultado, peso 60%)**:
+  - Vitória: 100 × 0,60 = 60 pontos.
+  - Empate: 20 × 0,60 = 12 pontos.
+  - Derrota: 10 × 0,60 = 6 pontos.
+- **TV (Turno, peso 35%)**:
+  - Baseado no turno final:
+    - Turno 1: 100 pontos.
+    - Turnos 2–10: 100 - (turno - 1) × 0,222.
+    - Turnos 11–20: 98 - (turno - 10) × 0,1.
+    - Após turno 20: 95,8.
+  - Limites:
+    - Vitória: Até 100 pontos.
+    - Empate: Até 80 pontos.
+    - Derrota: Até 35 pontos.
+  - Multiplicado por 0,35.
+- **ER (Eliminações, peso 2%)**:
+  - (eliminações válidas / (jogadores na mesa - 1)) × 100 × 0,02.
+  - Vitória sem eliminações: 50 × 0,02 = 1 ponto.
+  - Derrota: 0 pontos.
+- **PV (Vida Final, peso 2%)**:
+  - Vida limitada a 40.
+  - Vitória: 100 × 0,02 = 2 pontos.
+  - Empate:
+    - Vida ≥ 16: 40 × 0,02 = 0,8 ponto.
+    - Vida < 16: (vida / 40) × 100 × 0,02.
+  - Derrota:
+    - Vida ≥ 6: 15 × 0,02 = 0,3 ponto.
+    - Vida < 6: (vida / 40) × 100 × 0,02.
+- **PA (Oponentes Danificados, peso 1%)**:
+  - Vitória:
+    - 2+ oponentes: 100 × 0,01 = 1 ponto.
+    - 1 oponente: 50 × 0,01 = 0,5 ponto.
+  - Empate ou Derrota: 0 pontos.
+- **ID Total**:
+  - ID = RP + TV + ER + PV + PA.
+  - Mesas de 3 jogadores: ID × 0,9998.
+- **Limites de Validação**:
+  | Jogadores | Resultado | Mínimo | Máximo |
+  |-----------|-----------|--------|--------|
+  | 4         | Vitória   | 95,53  | 100,0  |
+  | 4         | Empate    | 40,0   | 42,13  |
+  | 4         | Derrota   | 18,25  | 20,88  |
+  | 3         | Vitória   | 95,51  | 99,98  |
+  | 3         | Empate    | 39,99  | 42,11  |
+  | 3         | Derrota   | 18,25  | 19,22  |
 
-| Jogador | Resultado | RP (60%) | TV (35%) | ER (2%) | PV (2%) | PA (1%) | ID (%) |
-|---------|-----------|----------|----------|---------|---------|---------|--------|
-| P5      | Vitória   | 100      | 97,8     | 33,33   | 100     | 100     | (0,60×100) + (0,35×97,8) + (0,02×33,33) + (0,02×100) + (0,01×100) = 60 + 34,23 + 0,667 + 2 + 1 = **97,897** |
-| P6      | Derrota   | 10       | 35       | 33,33   | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×33,33) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0,667 + 0 + 0 = **18,917** |
-| P7      | Derrota   | 10       | 35       | 33,33   | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×33,33) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0,667 + 0 + 0 = **18,917** |
-| P8      | Derrota   | 10       | 35       | 0       | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0 + 0 + 0 = **18,25** |
+### 12. Sistema Anti-Colusão
 
-### Mesa 3: Vitória Isolada (Vitória por Combo Determinístico, Sem Eliminações Parciais)
-**Contexto**: P9 vence no turno 5 com uma vitória por combo determinístico, sem eliminações diretas. P10, P11 e P12 são eliminados pelo combo. P9 não causa dano.
+**Propósito**: Detecta e gerencia comportamentos suspeitos de conluio.  
+**Atributos Principais**: Lista de denúncias e logs de padrões suspeitos.  
+**Responsabilidades**:  
+- Analisa partidas para identificar:
+  - Vitórias sem dano a oponentes (PA = 0).
+  - Eliminações concentradas em um jogador.
+  - Turnos prolongados (>20) sem eliminações.
+- Registra denúncias de colusão.  
+- Aplica penalidades (advertência, redução de 20% no ID, desclassificação).  
+**Contexto de Uso**: Usada após registrar resultados ou quando um juiz reporta uma suspeita.  
+**Regras**:  
+- Penalidades requerem autenticação de juiz.  
+- Advertência: Sem impacto no ID.  
+- Redução: Diminui 20% do ID acumulado.  
+- Desclassificação: Remove o jogador e zera o ID.
 
-**Parâmetros**:
-- **P9 (Vencedor)**: RP = 100, TV = 100 - ((5-1) × 0,222) = 99,112, ER = 100, PV = 100, PA = 0.
-- **P10 (Derrota)**: RP = 10, TV = min(99,112, 35) = 35, ER = 0, PV = min((15/40) × 100, 15) = 15, PA = 0.
-- **P11 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = min((10/40) × 100, 15) = 15, PA = 0.
-- **P12 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = min((5/40) × 100, 15) = 12,5, PA = 0.
+### 13. Sistema de Emparelhamento
 
-**Cálculo**:
+**Propósito**: Organiza jogadores em mesas usando um sistema Swiss simplificado.  
+**Atributos Principais**: Histórico de oponentes enfrentados.  
+**Responsabilidades**:  
+- Distribui jogadores em mesas de 4 ou 3, dependendo do número total.  
+- Evita repetições de oponentes entre rodadas.  
+- Garante que a média de ID por mesa esteja próxima da média do torneio (desvio ≤ 5%).  
+- Usa ordenação por ID nas rodadas subsequentes (aleatória na primeira).  
+**Contexto de Uso**: Usada ao iniciar uma rodada para formar mesas.  
+**Regras**:  
+- Mesas de 3 só são formadas se o número de jogadores não for divisível por 4.  
+- Mesas com desvio de ID acima de 5% são redistribuídas.  
+- Mínimo de 4 jogadores por torneio.
 
-| Jogador | Resultado | RP (60%) | TV (35%) | ER (2%) | PV (2%) | PA (1%) | ID (%) |
-|---------|-----------|----------|----------|---------|---------|---------|--------|
-| P9      | Vitória   | 100      | 99,112   | 100     | 100     | 0       | (0,60×100) + (0,35×99,112) + (0,02×100) + (0,02×100) + (0,01×0) = 60 + 34,689 + 2 + 2 + 0 = **98,689** |
-| P10     | Derrota   | 10       | 35       | 0       | 15      | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×15) + (0,01×0) = 6 + 12,25 + 0 + 0,3 + 0 = **18,55** |
-| P11     | Derrota   | 10       | 35       | 0       | 15      | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×15) + (0,01×0) = 6 + 12,25 + 0 + 0,3 + 0 = **18,55** |
-| P12     | Derrota   | 10       | 35       | 0       | 12,5    | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×12,5) + (0,01×0) = 6 + 12,25 + 0 + 0,25 + 0 = **18,5** |
+### 14. Gerenciador de Tempo
 
-### Mesa 4: Vitória Isolada (Vitória por Combo Determinístico, Eliminação por Outro Jogador)
-**Contexto**: P13 vence no turno 8 com uma vitória por combo determinístico. P14 elimina P16 diretamente. P13 elimina P14 e P15 via combo. P13 causa dano a 2+ oponentes.
+**Propósito**: Controla o tempo das partidas.  
+**Atributos Principais**: Temporizadores para partidas, com tempo de início, duração e turnos extras.  
+**Responsabilidades**:  
+- Inicia temporizadores ao começar uma rodada.  
+- Verifica se o tempo foi esgotado, considerando turnos extras.  
+- Força empate para jogadores ativos se o tempo acabar.  
+**Contexto de Uso**: Usada durante rodadas para monitorar partidas.  
+**Regras**:  
+- Duração padrão: 45 minutos (ajustável).  
+- Máximo de 5 turnos extras após o tempo regular.  
+- Empate é aplicado após os turnos extras.
 
-**Parâmetros**:
-- **P13 (Vencedor)**: RP = 100, TV = 100 - ((8-1) × 0,222) = 98,446, ER = 100, PV = 100, PA = 100.
-- **P14 (Derrota)**: RP = 10, TV = min(98,446, 35) = 35, ER = (1/3) × 100 = 33,33, PV = min((15/40) × 100, 15) = 15, PA = 0.
-- **P15 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = min((10/40) × 100, 15) = 15, PA = 0.
-- **P16 (Derrota)**: RP = 10, TV = 35, ER = 0, PV = 0, PA = 0.
+### 15. Sistema de Desempate
 
-**Cálculo**:
+**Propósito**: Define critérios para ordenar jogadores com IDs iguais.  
+**Atributos Principais**: Métodos para calcular a força dos oponentes.  
+**Responsabilidades**:  
+- Compara jogadores com base em:
+  1. Índice de desempenho (ID).
+  2. Força média dos oponentes (média de ID dos adversários).
+  3. Número de vitórias isoladas.
+  4. Sorteio aleatório.  
+**Contexto de Uso**: Usada ao gerar rankings.  
+**Regras**:  
+- Força dos oponentes é calculada com base em todas as partidas.  
+- Jogadores sem histórico têm força de oponentes igual a 0.
 
-| Jogador | Resultado | RP (60%) | TV (35%) | ER (2%) | PV (2%) | PA (1%) | ID (%) |
-|---------|-----------|----------|----------|---------|---------|---------|--------|
-| P13     | Vitória   | 100      | 98,446   | 100     | 100     | 100     | (0,60×100) + (0,35×98,446) + (0,02×100) + (0,02×100) + (0,01×100) = 60 + 34,456 + 2 + 2 + 1 = **99,456** |
-| P14     | Derrota   | 10       | 35       | 33,33   | 15      | 0       | (0,60×10) + (0,35×35) + (0,02×33,33) + (0,02×15) + (0,01×0) = 6 + 12,25 + 0,667 + 0,3 + 0 = **19,217** |
-| P15     | Derrota   | 10       | 35       | 0       | 15      | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×15) + (0,01×0) = 6 + 12,25 + 0 + 0,3 + 0 = **18,55** |
-| P16     | Derrota   | 10       | 35       | 0       | 0       | 0       | (0,60×10) + (0,35×35) + (0,02×0) + (0,02×0) + (0,01×0) = 6 + 12,25 + 0 + 0 + 0 = **18,25** |
+### 16. Gerenciador de Cadastros
 
-### Mesa 5: Empate (Todos com Mesma Vida, Com Eliminações)
-**Contexto**: P17, P18, P19 e P20 empatam no turno 18 (ex.: tempo esgotado). P17 elimina P18 e P19 antes do empate, todos com 25 PV.
+**Propósito**: Gerencia o cadastro de juízes, jogadores e decks.  
+**Atributos Principais**: Listas de juízes, jogadores e decks.  
+**Responsabilidades**:  
+- Cadastra juízes e jogadores, validando emails e senhas.  
+- Cadastra e valida decks, associando-os a jogadores e torneios.  
+- Busca entidades por email ou nome do deck.  
+**Contexto de Uso**: Usada para gerenciar dados de participantes e seus decks.  
+**Regras**:  
+- Emails devem ser únicos.  
+- Decks só podem ser validados se não estiverem associados a outros torneios.  
+- Cadastros requerem validação de formato e unicidade.
 
-**Parâmetros**:
-- **P17 (Empate)**: RP = 20, TV = min(98 - ((18-10) × 0,1), 80) = min(96,2, 80) = 80, ER = (2/3) × 100 = 66,67, PV = min((25/40) × 100, 40) = 40, PA = 0.
-- **P18 (Empate)**: RP = 20, TV = 80, ER = 0, PV = 40, PA = 0.
-- **P19 (Empate)**: RP = 20, TV = 80, ER = 0, PV = 40, PA = 0.
-- **P20 (Empate)**: RP = 20, TV = 80, ER = 0, PV = 40, PA = 0.
+### 17. Gerenciador de Torneio
 
-**Cálculo**:
+**Propósito**: Coordena a criação, execução e finalização de torneios.  
+**Atributos Principais**: Lista de torneios, integrações com emparelhamento, tempo e desempate.  
+**Responsabilidades**:  
+- Configura torneios com nome e mínimo de jogadores.  
+- Calcula o número de rodadas com base no número de jogadores.  
+- Valida resultados, garantindo consistência (ex.: uma vitória por mesa).  
+- Processa pontuações e analisa colusões.  
+**Contexto de Uso**: Usada pelo juiz para gerenciar torneios e pelo sistema para processar resultados.  
+**Regras**:  
+- Rodadas: 3 (≤8 jogadores), 4 (≤16), 5 (≤32), 6 (≤64), 7 (>64).  
+- Resultados inválidos (ex.: múltiplas vitórias) são rejeitados.  
+- Distribuição de mesas deve ser válida (4 ou 3 jogadores).
 
-| Jogador | Resultado | RP (60%) | TV (35%) | ER (2%) | PV (2%) | PA (1%) | ID (%) |
-|---------|-----------|----------|----------|---------|---------|---------|--------|
-| P17     | Empate    | 20       | 80       | 66,67   | 40      | 0       | (0,60×20) + (0,35×80) + (0,02×66,67) + (0,02×40) + (0,01×0) = 12 + 28 + 1,333 + 0,8 + 0 = **42,133** |
-| P18     | Empate    | 20       | 80       | 0       | 40      | 0       | (0,60×20) + (0,35×80) + (0,02×0) + (0,02×40) + (0,01×0) = 12 + 28 + 0 + 0,8 + 0 = **40,8** |
-| P19     | Empate    | 20       | 80       | 0       | 40      | 0       | (0,60×20) + (0,35×80) + (0,02×0) + (0,02×40) + (0,01×0) = 12 + 28 + 0 + 0,8 + 0 = **40,8** |
-| P20     | Empate    | 20       | 80       | 0       | 40      | 0       | (0,60×20) + (0,35×80) + (0,02×0) + (0,02×40) + (0,01×0) = 12 + 28 + 0 + 0,8 + 0 = **40,8** |
+### 18. Sistema Torneio Commander
 
-### Mesa 6: Empate (Vidas Diferentes, Com Eliminações)
-**Contexto**: P21, P22, P23 e P24 empatam no turno 15. P21 elimina P22 e P23 antes do empate. PV variados.
+**Propósito**: Interface principal do sistema, coordenando todas as funcionalidades.  
+**Atributos Principais**: Gerenciadores de torneios e cadastros, partidas ativas, sistema anti-colusão, mensagens de erro.  
+**Responsabilidades**:  
+- Exibe um menu interativo com 14 opções.  
+- Coordena cadastros, inscrições, rodadas, resultados e relatórios.  
+- Gerencia a persistência de dados após cada operação.  
+**Contexto de Uso**: Ponto de entrada para usuários (juízes e administradores).  
+**Regras**:  
+- Operações sensíveis (ex.: penalidades) requerem autenticação.  
+- Dados são salvos automaticamente após cada ação.  
+- O sistema valida a existência de torneios e partidas antes de ações específicas.
 
-**Parâmetros**:
-- **P21 (Empate)**: RP = 20, TV = min(98 - ((15-10) × 0,1), 80) = min(97,5, 80) = 80, ER = (2/3) × 100 = 66,67, PV = min((30/40) × 100, 40) = 40, PA = 0.
-- **P22 (Empate)**: RP = 20, TV = 80, ER = 0, PV = min((20/40) × 100, 40) = 40, PA = 0.
-- **P23 (Empate)**: RP = 20, TV = 80, ER = 0, PV = min((10/40) × 100, 40) = 25, PA = 0.
-- **P24 (Empate)**: RP = 20, TV = 80, ER = 0, PV = min((5/40) × 100, 40) = 12,5, PA = 0.
+## Regras de Pontuação e Validações
 
-**Cálculo**:
+O índice de desempenho (ID) é a métrica principal, composta por cinco componentes (RP, TV, ER, PV, PA), conforme descrito na seção **Calculador de Índice de Desempenho**. As principais validações incluem:
 
-| Jogador | Resultado | RP (60%) | TV (35%) | ER (2%) | PV (2%) | PA (1%) | ID (%) |
-|---------|-----------|----------|----------|---------|---------|---------|--------|
-| P21     | Empate    | 20       | 80       | 66,67   | 40      | 0       | (0,60×20) + (0,35×80) + (0,02×66,67) + (0,02×40) + (0,01×0) = 12 + 28 + 1,333 + 0,8 + 0 = **42,133** |
-| P22     | Empate    | 20       | 80       | 0       | 40      | 0       | (0,60×20) + (0,35×80) + (0,02×0) + (0,02×40) + (0,01×0) = 12 + 28 + 0 + 0,8 + 0 = **40,8** |
-| P23     | Empate    | 20       | 80       | 0       | 25      | 0       | (0,60×20) + (0,35×80) + (0,02×0) + (0,02×25) + (0,01×0) = 12 + 28 + 0 + 0,5 + 0 = **40,5** |
-| P24     | Empate    | 20       | 80       | 0       | 12,5    | 0       | (0,60×20) + (0,35×80) + (0,02×0) + (0,02×12,5) + (0,01×0) = 12 + 28 + 0 + 0,25 + 0 = **40,25** |
+- **Resultados por Mesa**:
+  - Apenas um jogador pode vencer.  
+  - Empates requerem que todos os jogadores ativos empatem.  
+  - Eliminações/desistências implicam derrota.  
+- **Eliminações**:
+  - Máximo de eliminações: número de jogadores menos 2.  
+  - Desistências não contam para ER.  
+- **Turnos**:
+  - Limitados ao turno atual + 5 turnos extras.  
+- **Vida Final**:
+  - Limitada a 40 pontos.  
+- **Penalidades**:
+  - Advertência: Sem impacto no ID.  
+  - Redução: 20% do ID acumulado.  
+  - Desclassificação: Remove o jogador e zera o ID.  
+- **Anti-Colusão**:
+  - Padrões suspeitos (ex.: vitória sem PA) são sinalizados.  
+  - Denúncias requerem autenticação de juiz.
 
-### Ranking de Jogadores
+## Exemplo de Rodada
 
-| Posição | Jogador | Mesa | Resultado | ID (%) |
-|---------|---------|------|-----------|--------|
-| 1       | P1      | 1    | Vitória   | 99,534 |
-| 2       | P13     | 4    | Vitória   | 99,456 |
-| 3       | P9      | 3    | Vitória   | 98,689 |
-| 4       | P5      | 2    | Vitória   | 97,897 |
-| 5       | P17     | 5    | Empate    | 42,133 |
-| 6       | P21     | 6    | Empate    | 42,133 |
-| 7       | P18     | 5    | Empate    | 40,8   |
-| 8       | P19     | 5    | Empate    | 40,8   |
-| 9       | P20     | 5    | Empate    | 40,8   |
-| 10      | P22     | 6    | Empate    | 40,8   |
-| 11      | P23     | 6    | Empate    | 40,5   |
-| 12      | P24     | 6    | Empate    | 40,25  |
-| 13      | P14     | 4    | Derrota   | 19,217 |
-| 14      | P6      | 2    | Derrota   | 18,917 |
-| 15      | P7      | 2    | Derrota   | 18,917 |
-| 16      | P10     | 3    | Derrota   | 18,55  |
-| 17      | P11     | 3    | Derrota   | 18,55  |
-| 18      | P15     | 4    | Derrota   | 18,55  |
-| 19      | P12     | 3    | Derrota   | 18,5   |
-| 20      | P2      | 1    | Derrota   | 18,25  |
-| 21      | P3      | 1    | Derrota   | 18,25  |
-| 22      | P4      | 1    | Derrota   | 18,25  |
-| 23      | P8      | 2    | Derrota   | 18,25  |
-| 24      | P16     | 4    | Derrota   | 18,25  |
+Abaixo, descrevemos uma rodada do torneio fictício **Desafio dos Comandantes 2025**, com 23 jogadores distribuídos em 6 mesas (5 de 4 jogadores e 1 de 3 jogadores). Os exemplos cobrem vitórias rápidas, empates, eliminações parciais, desistências e penalidades.
 
-### Observações
-- **Mesa 1**: P1 tem ID elevado (99,534%) devido a RP = 100, ER = 100, e TV = 98,668. Perdedores (P2, P3, P4) têm IDs reduzidos (18,25%) devido a TV ≤ 35 e PV = 0.
-- **Mesa 2**: P5 tem ID (97,897%), inferior a P1 devido a ER = 33,33 e turno tardio (TV = 97,8). P6 e P7 (ID = 18,917%) superam P8 (18,25%) por ER = 33,33.
-- **Mesa 3**: P9, com combo determinístico, tem ID (98,689%), inferior a P1 devido a PA = 0. Perdedores têm IDs variados (18,5–18,55%) por PV.
-- **Mesa 4**: P13 tem ID (99,456%), similar a P1, beneficiado por ER = 100 e PA = 100. P14 (ID = 19,217%) supera P15 (18,55%) e P16 (18,25%) por ER e PV.
-- **Mesa 5**: Empate com PV iguais, mas P17 tem ID maior (42,133%) devido a ER = 66,67. P18, P19 e P20 têm ID = 40,8% (ER = 0).
-- **Mesa 6**: Empate com PV diferentes. P21 tem ID = 42,133% (ER = 66,67). P22, P23 e P24 têm IDs variados (40,25–40,8%) devido a PV.
-- **Estilos de Vitória**:
-  - **Dano letal (Turno 10)**: ID = 99,3 (RP = 100, TV = 98, ER = 100, PV = 100, PA = 100).
-  - **Combo determinístico (Turno 5)**: ID = 98,689 (RP = 100, TV = 99,112, ER = 100, PV = 100, PA = 0).
-  - **Esgotamento de biblioteca (Turno 3)**: ID = 99,845 (RP = 100, TV = 99,556, ER = 100, PV = 100, PA = 0).
-  - **Veneno/Infect (Turno 7)**: ID = 99,784 (RP = 100, TV = 98,668, ER = 100, PV = 100, PA = 100).
-  - **Dano de comandante (Turno 8)**: ID = 99,456 (RP = 100, TV = 98,446, ER = 100, PV = 100, PA = 100).
-  - **Condição alternativa (Turno 12)**: ID = 97,73 (RP = 100, TV = 97,8, ER = 50, PV = 100, PA = 0).
-  - **Efeito de perda direta (Turno 10)**: ID = 97,3 (RP = 100, TV = 98, ER = 50, PV = 100, PA = 0).
-  - **Empate (Turno 15, 2 eliminações, Mesa 4)**: ID = 42,133 (RP = 20, TV = 80, ER = 66,67, PV = 40, PA = 0).
-  - **Empate (Turno 15, 1 eliminação, Mesa 3)**: ID = 42,11 (RP = 20, TV = 80, ER = 50, PV = 40, PA = 0).
-  - **Concessão (Turno 15)**: ID = 97,625 (RP = 100, TV = 97,5, ER = 50, PV = 100, PA = 50).
-  - **Penalidade (Turno 5)**: ID = 98,189 (RP = 100, TV = 99,112, ER = 50, PV = 100, PA = 0).
-  - **Controle prolongado (Turno 25)**: ID = 97,03 (RP = 100, TV = 95,8, ER = 50, PV = 100, PA = 50).
-  - **Loop determinístico (Turno 8)**: ID = 98,456 (RP = 100, TV = 98,446, ER = 100, PV = 100, PA = 0).
-  - **Objetivos específicos (Turno 7)**: ID = 99,784 (RP = 100, TV = 98,668, ER = 100, PV = 100, PA = 100).
+### Contexto da Rodada
 
-### Considerações de Cenários
-O sistema é projetado para:
-- **Tamanhos variados**: 4 a 100 jogadores, com mesas de 3 ou 4.
-- **Resultados diversos**: Vitórias isoladas, empates múltiplos, derrotas com PV e eliminações variados.
-- **Turnos e PV**: Turnos de 1 a 20+ e PV de 0 a 40+, com normalização.
-- **Colusão**: Detecção de manipulações via PA, ER, TV.
-- **Desempenho**: Recompensa eficiência (TV), eliminações (ER), resistência (PV) e agressão (PA).
-- **Mesas de 3 Jogadores**: IDs ajustados por 0,9998 para manter diferença de 0,02%.
+- **Torneio**: Desafio dos Comandantes 2025.
+- **Rodada**: 2ª de 5.
+- **Jogadores**: 23 (5 mesas de 4, 1 mesa de 3).
+- **Tempo por Rodada**: 45 minutos, com 5 turnos extras.
+- **Média de ID**: 50,0 pontos (baseada na rodada anterior).
 
-### Falhas Potenciais e Mitigações
+### Mesa 1 (3 Jogadores, Vitória Rápida por Combo)
 
-| Falha                     | Descrição                                           | Mitigação                                      |
-|---------------------------|-----------------------------------------------------|------------------------------------------------|
-| Dados imprecisos          | Erros em turnos, eliminações, PV ou PA              | Validação automática e revisão por juízes      |
-| Colusão não detectada     | Manipulação (ex.: evitar ataques, prolongar turnos) | Análise estatística de PA, ER, TV e denúncias  |
-| Matchmaking desbalanceado | IDs muito diferentes na mesma mesa                  | Limite de 5% de desvio por mesa               |
-| Sistema lento             | Atrasos em grandes torneios                         | Backend otimizado com caching                  |
-| Escalabilidade limitada   | Problemas em torneios pequenos/grandes              | Algoritmo adaptável para mesas de 3/4 jogadores |
+**Jogadores**: Ana, Bruno, Clara.  
+**Cenário**: Ana usa uma estratégia de combo no turno 1, eliminando Bruno e Clara.  
+**Resultados**:
+- Ana: Vitória, turno 1, 2 eliminações, vida final 40, 2 oponentes danificados.  
+- Bruno: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Clara: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
 
-### Conclusão
-O sistema é equitativo e escalável, com suporte a mesas de 3 e 4 jogadores. A normalização de IDs para mesas de 3 jogadores (fator 0,9998) garante consistência. A hierarquia (Vitória ≥ 95,53% > Empate ≤ 42,13% > Derrota ≤ 19,22%) é reforçada por tetos (TV ≤ 35 e PV ≤ 15 para derrotas) e restrições (2 × melhor empate < pior vitória, 2 × melhor derrota < melhor empate). Recomenda-se testar em torneios reais e considerar ajuste em TV (ex.: 96 para turnos > 20) para vitórias tardias, como estratégias de controle prolongado.
+**Cálculo do ID**:
+- **Ana**:
+  - RP: 100 × 0,60 = 60,0.
+  - TV: 100 × 0,35 = 35,0.
+  - ER: (2 / 2) × 100 × 0,02 = 2,0.
+  - PV: 100 × 0,02 = 2,0.
+  - PA: 100 × 0,01 = 1,0.
+  - ID: (60,0 + 35,0 + 2,0 + 2,0 + 1,0) × 0,9998 = 99,98.
+- **Bruno** e **Clara**:
+  - RP: 10 × 0,60 = 6,0.
+  - TV: 35 × 0,35 = 12,25.
+  - ER: 0.
+  - PV: 0.
+  - PA: 0.
+  - ID: (6,0 + 12,25 + 0 + 0 + 0) × 0,9998 = 18,25.
+
+**Ranking da Mesa**:
+1. Ana: 99,98 pontos (Vitória).
+2. Bruno: 18,25 pontos (Derrota).
+3. Clara: 18,25 pontos (Derrota).
+
+### Mesa 2 (4 Jogadores, Vitória Rápida por Combo)
+
+**Jogadores**: Diego, Elisa, Fábio, Gabriela.  
+**Cenário**: Diego executa um combo no turno 1, eliminando todos os oponentes.  
+**Resultados**:
+- Diego: Vitória, turno 1, 3 eliminações, vida final 40, 3 oponentes danificados.  
+- Elisa, Fábio, Gabriela: Derrota, turno 1, 0 eliminações, vida final 0, 0 oponentes danificados.  
+
+**Cálculo do ID**:
+- **Diego**:
+  - RP: 60,0.
+  - TV: 35,0.
+  - ER: (3 / 3) × 100 × 0,02 = 2,0.
+  - PV: 2,0.
+  - PA: 1,0.
+  - ID: 60,0 + 35,0 + 2,0 + 2,0 + 1,0 = 100,0.
+- **Elisa, Fábio, Gabriela**:
+  - RP: 6,0.
+  - TV: 12,25.
+  - ER: 0.
+  - PV: 0.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
+
+**Ranking da Mesa**:
+1. Diego: 100,0 pontos (Vitória).
+2. Elisa, Fábio, Gabriela: 18,25 pontos (Derrota).
+
+### Mesa 3 (4 Jogadores, Empate com Eliminação Parcial)
+
+**Jogadores**: Hugo, Inês, João, Karen.  
+**Cenário**: João é eliminado por Hugo no turno 5. O tempo esgota, forçando empate entre Hugo, Inês e Karen.  
+**Resultados**:
+- Hugo: Empate, turno 10, 1 eliminação, vida final 20, 2 oponentes danificados.  
+- Inês: Empate, turno 10, 0 eliminações, vida final 16, 1 oponente danificado.  
+- Karen: Empate, turno 10, 0 eliminações, vida final 12, 1 oponente danificado.  
+- João: Derrota, turno 5, 0 eliminações, vida final 0, 0 oponentes danificados.  
+
+**Cálculo do ID**:
+- **Hugo**:
+  - RP: 20 × 0,60 = 12,0.
+  - TV: [100 - (10 - 1) × 0,222] = 80,002 × 0,35 = 28,0.
+  - ER: (1 / 3) × 100 × 0,02 = 0,67.
+  - PV: 40 × 0,02 = 0,8.
+  - PA: 0.
+  - ID: 12,0 + 28,0 + 0,67 + 0,8 + 0 = 41,47.
+- **Inês**:
+  - RP: 12,0.
+  - TV: 28,0.
+  - ER: 0.
+  - PV: 40 × 0,02 = 0,8.
+  - PA: 0.
+  - ID: 12,0 + 28,0 + 0 + 0,8 + 0 = 40,8.
+- **Karen**:
+  - RP: 12,0.
+  - TV: 28,0.
+  - ER: 0.
+  - PV: (12 / 40) × 100 × 0,02 = 0,6.
+  - PA: 0.
+  - ID: 12,0 + 28,0 + 0 + 0,6 + 0 = 40,6.
+- **João**:
+  - RP: 6,0.
+  - TV: [100 - (5 - 1) × 0,222] = 99,112 × 0,35 = 12,25.
+  - ER: 0.
+  - PV: 0.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
+
+**Ranking da Mesa**:
+1. Hugo: 41,47 pontos (Empate).
+2. Inês: 40,8 pontos (Empate).
+3. Karen: 40,6 pontos (Empate).
+4. João: 18,25 pontos (Derrota).
+
+### Mesa 4 (4 Jogadores, Vitória com Penalidade)
+
+**Jogadores**: Lucas, Marina, Nina, Otávio.  
+**Cenário**: Lucas vence no turno 8, eliminando Marina e Nina. Otávio desiste no turno 6. O juiz aplica uma advertência a Lucas por vitória sem dano a oponentes.  
+**Resultados**:
+- Lucas: Vitória, turno 8, 2 eliminações, vida final 30, 0 oponentes danificados (advertência).  
+- Marina, Nina: Derrota, turno 8, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Otávio: Derrota, turno 6, 0 eliminações, vida final 10, 0 oponentes danificados (desistência).  
+
+**Cálculo do ID**:
+- **Lucas**:
+  - RP: 60,0.
+  - TV: [100 - (8 - 1) × 0,222] = 84,446 × 0,35 = 29,56.
+  - ER: (2 / 3) × 100 × 0,02 = 1,33.
+  - PV: 2,0.
+  - PA: 0 (sinalizado como suspeito).
+  - ID: 60,0 + 29,56 + 1,33 + 2,0 + 0 = 92,89.
+- **Marina, Nina**:
+  - RP: 6,0.
+  - TV: 12,25.
+  - ER: 0.
+  - PV: 0.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
+- **Otávio**:
+  - RP: 6,0.
+  - TV: [100 - (6 - 1) × 0,222] = 98,89 × 0,35 = 12,25.
+  - ER: 0.
+  - PV: 15 × 0,02 = 0,3.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0 + 0,3 + 0 = 18,55.
+
+**Ranking da Mesa**:
+1. Lucas: 92,89 pontos (Vitória, advertência).
+2. Otávio: 18,55 pontos (Derrota).
+3. Marina, Nina: 18,25 pontos (Derrota).
+
+### Mesa 5 (4 Jogadores, Empate Completo)
+
+**Jogadores**: Pedro, Quitéria, Rafael, Sofia.  
+**Cenário**: Nenhum jogador é eliminado, e o tempo esgota, forçando empate.  
+**Resultados**:
+- Pedro: Empate, turno 12, 0 eliminações, vida final 18, 2 oponentes danificados.  
+- Quitéria: Empate, turno 12, 0 eliminações, vida final 16, 1 oponente danificado.  
+- Rafael: Empate, turno 12, 0 eliminações, vida final 10, 1 oponente danificado.  
+- Sofia: Empate, turno 12, 0 eliminações, vida final 8, 0 oponentes danificados.  
+
+**Cálculo do ID**:
+- **Pedro, Quitéria**:
+  - RP: 12,0.
+  - TV: [98 - (12 - 10) × 0,1] = 97,8 × 0,35 = 28,0.
+  - ER: 0.
+  - PV: 40 × 0,02 = 0,8.
+  - PA: 0.
+  - ID: 12,0 + 28,0 + 0 + 0,8 + 0 = 40,8.
+- **Rafael**:
+  - RP: 12,0.
+  - TV: 28,0.
+  - ER: 0.
+  - PV: (10 / 40) × 100 × 0,02 = 0,5.
+  - PA: 0.
+  - ID: 12,0 + 28,0 + 0 + 0,5 + 0 = 40,5.
+- **Sofia**:
+  - RP: 12,0.
+  - TV: 28,0.
+  - ER: 0.
+  - PV: (8 / 40) × 100 × 0,02 = 0,4.
+  - PA: 0.
+  - ID: 12,0 + 28,0 + 0 + 0,4 + 0 = 40,4.
+
+**Ranking da Mesa**:
+1. Pedro, Quitéria: 40,8 pontos (Empate).
+2. Rafael: 40,5 pontos (Empate).
+3. Sofia: 40,4 pontos (Empate).
+
+### Mesa 6 (4 Jogadores, Vitória com Eliminações Parciais)
+
+**Jogadores**: Tiago, Úrsula, Victor, Wanda.  
+**Cenário**: Úrsula elimina Victor no turno 4. Wanda desiste no turno 6. Tiago vence no turno 10, eliminando Úrsula.  
+**Resultados**:
+- Tiago: Vitória, turno 10, 1 eliminação, vida final 25, 2 oponentes danificados.  
+- Úrsula: Derrota, turno 10, 1 eliminação, vida final 0, 1 oponente danificado.  
+- Victor: Derrota, turno 4, 0 eliminações, vida final 0, 0 oponentes danificados.  
+- Wanda: Derrota, turno 6, 0 eliminações, vida final 15, 0 oponentes danificados (desistência).  
+
+**Cálculo do ID**:
+- **Tiago**:
+  - RP: 60,0.
+  - TV: [100 - (10 - 1) × 0,222] = 80,002 × 0,35 = 28,0.
+  - ER: (1 / 3) × 100 × 0,02 = 0,67.
+  - PV: 2,0.
+  - PA: 1,0.
+  - ID: 60,0 + 28,0 + 0,67 + 2,0 + 1,0 = 91,67.
+- **Úrsula**:
+  - RP: 6,0.
+  - TV: 12,25.
+  - ER: (1 / 3) × 100 × 0,02 = 0,67.
+  - PV: 0.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0,67 + 0 + 0 = 18,92.
+- **Victor**:
+  - RP: 6,0.
+  - TV: [100 - (4 - 1) × 0,222] = 99,334 × 0,35 = 12,25.
+  - ER: 0.
+  - PV: 0.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0 + 0 + 0 = 18,25.
+- **Wanda**:
+  - RP: 6,0.
+  - TV: [100 - (6 - 1) × 0,222] = 98,89 × 0,35 = 12,25.
+  - ER: 0.
+  - PV: 15 × 0,02 = 0,3.
+  - PA: 0.
+  - ID: 6,0 + 12,25 + 0 + 0,3 + 0 = 18,55.
+
+**Ranking da Mesa**:
+1. Tiago: 91,67 pontos (Vitória).
+2. Úrsula: 18,92 pontos (Derrota).
+3. Wanda: 18,55 pontos (Derrota).
+4. Victor: 18,25 pontos (Derrota).
+
+### Ranking Geral Após a Rodada
+
+Assumindo IDs acumulados da rodada anterior, o ranking geral considera o ID total, força dos oponentes e vitórias isoladas:
+
+| Posição | Jogador   | ID Total | Vitórias Isoladas | Força dos Oponentes |
+|---------|-----------|----------|-------------------|---------------------|
+| 1       | Diego     | 150,0    | 2                 | 60,0                |
+| 2       | Ana       | 149,98   | 2                 | 55,0                |
+| 3       | Tiago     | 141,67   | 2                 | 50,0                |
+| 4       | Hugo      | 91,47    | 1                 | 45,0                |
+| ...     | ...       | ...      | ...               | ...                 |
+| 20      | João      | 68,25    | 0                 | 40,0                |
+| 21      | Victor    | 68,25    | 0                 | 35,0                |
+
+**Desempate**:
+- Diego supera Ana devido ao ID maior (150,0 vs. 149,98).  
+- João supera Victor pelo maior valor de força dos oponentes (40,0 vs. 35,0).
+
+## Contribuindo
+
+Contribuições são bem-vindas! Para sugerir melhorias ou reportar problemas, abra uma issue no repositório. Siga as diretrizes no arquivo `CONTRIBUTING.md`.
+
+## Licença
+
+Este projeto é licenciado sob a [MIT License](LICENSE).
